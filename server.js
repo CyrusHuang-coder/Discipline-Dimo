@@ -422,7 +422,7 @@ app.post('/api/user/change-password', authenticateToken, async (req, res) => {
   // 验证旧密码
   const user = await queryOne('SELECT password FROM users WHERE id = ?', [userId]);
   if (!user || user.password !== oldPassword) {
-    return res.status(401).json({ error: '旧密码错误' });
+    return res.status(400).json({ error: '旧密码错误' });
   }
   // 更新密码
   await queryRun('UPDATE users SET password = ? WHERE id = ?', [newPassword, userId]);
