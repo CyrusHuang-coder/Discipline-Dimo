@@ -35,15 +35,22 @@ function all(sql, params = []) {
 
 // ---------- 初始化所有表 ----------
 async function initializeDB() {
-  // 1. 用户表
+  // 1. 用户表（增加 avatar 列）
   await run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username VARCHAR(50) UNIQUE NOT NULL,
       password VARCHAR(50) NOT NULL,
-      pushplus_token VARCHAR(255) DEFAULT NULL
+      pushplus_token VARCHAR(255) DEFAULT NULL,
+      avatar VARCHAR(255) DEFAULT NULL
     )
   `);
+  // 兼容旧表：如果 avatar 列不存在则添加
+  try {
+    await run("ALTER TABLE users ADD COLUMN avatar VARCHAR(255) DEFAULT NULL");
+  } catch (e) {
+    // 列已存在则忽略错误
+  }
 
   // 2. 打卡记录表
   await run(`
