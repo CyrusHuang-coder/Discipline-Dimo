@@ -5,3 +5,5 @@ data.db
 .DS_Store
 Thumbs.db
 *.log
+dimo.iconset/
+dimo_export.png
