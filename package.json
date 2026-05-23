@@ -1,0 +1,60 @@
+{
+  "name": "habit-app",
+  "version": "1.0.0",
+  "description": "多用户习惯打卡应用",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "concurrently \"node server.js\" \"electron electron/main.js\"",
+    "electron": "electron electron/main.js",
+    "electron-build": "electron-builder",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.yourname.habit-app",
+    "productName": "自律的迪莫",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "public/**/*",
+      "server.js",
+      "database.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "data.db",
+        "to": "data.db",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": false,
+    "mac": {
+      "category": "public.app-category.lifestyle",
+      "icon": "electron/dimo.icns"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "mysql2": "^3.6.0",
+    "node-cron": "^3.0.2",
+    "node-fetch": "^2.7.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^41.7.0",
+    "electron-builder": "^26.8.1"
+  }
+}

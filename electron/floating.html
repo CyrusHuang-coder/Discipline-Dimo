@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      overflow: hidden;
+    }
+    .avatar {
+      /* 去掉边框、背景、圆角 */
+      width: auto;
+      height: auto;
+      background: transparent;
+      box-shadow: none;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .avatar img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      animation: breathe 2.5s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+      100% { transform: translateY(0px); }
+    }
+    .avatar img.happy-animate {
+      animation: float 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+<div class="avatar" id="dimoAvatar">
+  <img id="dimoImg" src="dimo.png" alt="迪莫">
+</div>
+<script>
+  const emotions = {
+    normal: 'http://localhost:8080/images/dimo.png',
+    happy: 'http://localhost:8080/images/dimo-happy.png',
+    surprised: 'http://localhost:8080/images/dimo-surprised.png',
+    sleepy: 'http://localhost:8080/images/dimo-sleepy.png',
+    wink: 'http://localhost:8080/images/dimo-wink.png'
+  };
+
+  const img = document.getElementById('dimoImg');
+  let currentEmotion = 'normal';
+  let idleTimer = null;
+  let clickTimer = null;
+  let autoBlinkTimer = null;
+  let longPressTimer = null;
+  let isLongPressing = false;
+
+  // 拖拽窗口相关变量
+  let isDraggingWindow = false;
+  let dragStartX = 0, dragStartY = 0;
+  let dragStartMouseX = 0, dragStartMouseY = 0;
+
+  function setEmotion(emotion, duration = 0, addAnimation = false) {
+    const src = emotions[emotion];
+    if (!src) return;
+    if (currentEmotion === emotion && duration === 0) return;
+    console.log(`[表情] ${currentEmotion} -> ${emotion}`);
+    img.src = src;
+    currentEmotion = emotion;
+    if (addAnimation && emotion === 'happy') {
+      img.classList.add('happy-animate');
+      setTimeout(() => img.classList.remove('happy-animate'), 400);
+    }
+    if (duration > 0 && emotion !== 'happy') {
+      setTimeout(() => {
+        if (currentEmotion === emotion) {
+          setEmotion('normal', 0);
+        }
+      }, duration);
+    }
+  }
+
+  function resetIdleTimer() {
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      console.log('[闲置] 10秒无操作 -> sleepy');
+      if (currentEmotion !== 'sleepy') {
+        setEmotion('sleepy', 0);
+      }
+    }, 10000);
+  }
+
+  function wakeUp() {
+    if (currentEmotion === 'sleepy') {
+      console.log('[唤醒] 退出 sleepy');
+      setEmotion('normal', 0);
+    }
+    resetIdleTimer();
+  }
+
+  function startAutoBlink() {
+    if (autoBlinkTimer) clearInterval(autoBlinkTimer);
+    autoBlinkTimer = setInterval(() => {
+      const forbidden = ['wink', 'surprised', 'sleepy'];
+      if (!forbidden.includes(currentEmotion)) {
+        setEmotion('wink', 150);
+      }
+    }, 4000);
+  }
+
+  function openMainApp() {
+    console.log('[交互] 打开主窗口');
+    if (window.electronAPI && window.electronAPI.openMainWindow) {
+      window.electronAPI.openMainWindow();
+      setEmotion('happy', 0, true);
+    } else {
+      console.error('[错误] electronAPI 未定义');
+    }
+  }
+
+  // 拖拽窗口：向主进程发送移动请求
+  function startDragWindow(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragStartMouseX = e.clientX;
+    dragStartMouseY = e.clientY;
+    // 获取当前窗口位置
+    if (window.electronAPI && window.electronAPI.getWindowPosition) {
+      window.electronAPI.getWindowPosition().then(pos => {
+        dragStartX = pos.x;
+        dragStartY = pos.y;
+        isDraggingWindow = true;
+      });
+    } else {
+      // 降级：直接调用移动（需要主进程支持）
+      isDraggingWindow = true;
+    }
+    // 不立即显示惊讶，等待长按判定
+  }
+
+  function onDragMouseMove(e) {
+    if (!isDraggingWindow) return;
+    const deltaX = e.clientX - dragStartMouseX;
+    const deltaY = e.clientY - dragStartMouseY;
+    const newX = dragStartX + deltaX;
+    const newY = dragStartY + deltaY;
+    if (window.electronAPI && window.electronAPI.moveWindow) {
+      window.electronAPI.moveWindow(newX, newY);
+    }
+  }
+
+  function stopDragWindow() {
+    isDraggingWindow = false;
+  }
+
+  // 头像交互
+  const avatar = document.getElementById('dimoAvatar');
+  let mouseDownTime = 0;
+  let mouseDownTimer = null;
+
+  avatar.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    mouseDownTime = Date.now();
+    wakeUp();
+    // 启动长按定时器（用于拖拽震惊表情，而非窗口移动）
+    mouseDownTimer = setTimeout(() => {
+      console.log('[长按] 触发惊讶表情');
+      isLongPressing = true;
+      setEmotion('surprised', 0);
+    }, 200);
+    // 同时启动窗口拖拽（移动窗口，不受长按影响）
+    startDragWindow(e);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (isDraggingWindow) {
+      onDragMouseMove(e);
+    } else {
+      // 普通移动，用于唤醒 sleepy（仅当当前 sleepy 时唤醒）
+      if (currentEmotion === 'sleepy') {
+        wakeUp();
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if (e.button !== 0) return;
+    const downDuration = Date.now() - mouseDownTime;
+    if (mouseDownTimer) clearTimeout(mouseDownTimer);
+    if (isLongPressing) {
+      // 长按后松开：恢复 normal
+      console.log('[长按结束] 恢复 normal');
+      setEmotion('normal', 0);
+      isLongPressing = false;
+    } else {
+      // 短按：单击/双击
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        console.log('[双击] 开心+打开网页');
+        setEmotion('happy', 0, true);
+        openMainApp();
+      } else {
+        clickTimer = setTimeout(() => {
+          console.log('[单击] 眨眼');
+          setEmotion('wink', 300);
+          clickTimer = null;
+        }, 200);
+      }
+    }
+    // 停止窗口拖拽
+    if (isDraggingWindow) {
+      stopDragWindow();
+    }
+    mouseDownTime = 0;
+  });
+
+  // 全局键盘唤醒
+  window.addEventListener('keydown', () => {
+    if (currentEmotion === 'sleepy') wakeUp();
+  });
+
+  setEmotion('normal', 0);
+  resetIdleTimer();
+  startAutoBlink();
+  console.log('[初始化] 完成，electronAPI =', window.electronAPI);
+</script>
+</body>
+</html>

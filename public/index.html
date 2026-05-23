@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>习惯打卡 · 自律花园</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #fbc2c2 0%, #f7a8c4 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 48px 32px 48px 32px;
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      backdrop-filter: blur(2px);
+      transition: all 0.3s ease;
+    }
+
+    .header {
+      background: #ff6b8b;
+      padding: 30px 20px 20px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 #c44569;
+    }
+    .header p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 8px;
+    }
+
+    .content {
+      padding: 28px 22px 32px;
+    }
+
+    /* 状态卡片 */
+    .status-card {
+      background: #fff0f3;
+      border-radius: 32px;
+      padding: 20px;
+      margin-bottom: 28px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    .current-date {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #a12a44;
+      margin-bottom: 10px;
+    }
+    .checked-badge {
+      display: inline-block;
+      background: #ffb7c5;
+      padding: 6px 18px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #a12a44;
+      margin-bottom: 15px;
+    }
+    .streak {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #ff6b8b;
+      margin: 8px 0;
+    }
+    .points {
+      font-size: 1.5rem;
+      background: #ffe2e8;
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin: 12px 0;
+    }
+    .quote {
+      font-style: italic;
+      color: #a55c6e;
+      background: #fff4f7;
+      padding: 10px;
+      border-radius: 28px;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    /* 日历样式 */
+    .calendar-section {
+      background: #fff0f3;
+      border-radius: 32px;
+      padding: 15px;
+      margin-bottom: 28px;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #a12a44;
+    }
+    .calendar-header button {
+      background: #ffb7c5;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      gap: 5px;
+    }
+    .calendar-weekday {
+      font-weight: bold;
+      color: #a55c6e;
+      padding: 8px 0;
+    }
+    .calendar-day {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      background: white;
+      border-radius: 50%;
+      transition: 0.1s;
+      cursor: default;
+      position: relative;
+    }
+    /* 铅笔画风圈起来的打卡日 */
+    .calendar-day.checked {
+      background: #ffe2e8;
+      border: 2px dashed #ff6b8b;
+      box-shadow: 0 0 0 2px white, 0 0 0 4px #ffb7c5;
+      font-weight: bold;
+      color: #c44569;
+    }
+    .calendar-day.empty {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    /* 里程碑 - 地图背景 + 绝对定位标记（新版） */
+    .milestone-section {
+      position: relative;
+      background-image: url('/images/background-map.jpg') !important;
+      background-size: cover !important;
+      background-position: center 30% !important;
+      background-repeat: no-repeat !important;
+      border-radius: 32px;
+      margin-bottom: 28px;
+      overflow: hidden;
+      min-height: 260px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    }
+  
+    #milestoneMarkers {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      background: transparent !important;
+    }
+
+    .milestone-marker {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      transform: translate(-50%, -50%);
+      cursor: default;
+      text-align: center;
+      line-height: 48px;
+      font-size: 28px;
+      background: rgba(255, 240, 245, 0.7); /* 半透背景，模拟迷雾 */
+      border-radius: 50%;
+      backdrop-filter: blur(3px);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-weight: bold;
+    }
+
+    /* 点亮状态 */
+    .milestone-marker.lit {
+      background: rgba(255, 215, 0, 0.4);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 0 12px gold;
+      font-size: 32px;
+    }
+
+    /* 按钮等原有样式保持不变 */
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      background: #ff8aa8;
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 14px 0;
+      border-radius: 60px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+      background: #ff6b8b;
+      box-shadow: 0 8px 18px #ff6b8b70;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary {
+      background: #a5dee5;
+      color: #2d5f6b;
+    }
+    .logout-btn {
+      background: #d9b4c4;
+      color: #4a2e38;
+      margin-top: 5px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 28px 0 12px 0;
+      padding-left: 8px;
+      border-left: 5px solid #ff8aa8;
+      color: #5c3b43;
+    }
+    .wish-input {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .wish-input input {
+      flex: 3;
+      padding: 12px 16px;
+      border: 2px solid #ffced9;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      outline: none;
+      background: white;
+    }
+    .wish-input button {
+      flex: 1;
+      background: #ff8aa8;
+      border: none;
+      border-radius: 50px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .wish-list {
+      list-style: none;
+      background: #fef6f9;
+      border-radius: 28px;
+      padding: 15px;
+    }
+    .wish-list li {
+      background: white;
+      margin: 8px 0;
+      padding: 12px 16px;
+      border-radius: 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .wish-status {
+      font-size: 0.7rem;
+      background: #e9ecef;
+      padding: 4px 12px;
+      border-radius: 50px;
+    }
+    .small-btn {
+      background: #f1c0d0;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .rewards-panel {
+      background: #fef6f9;
+      border-radius: 32px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .reward-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #ffe0e7;
+    }
+    .settings-area {
+      margin-top: 30px;
+      background: #fff5f7;
+      border-radius: 32px;
+      padding: 18px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 18px;
+      margin: 12px 0;
+      border: 2px solid #ffced9;
+      border-radius: 60px;
+      font-size: 1rem;
+    }
+    .auth-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .hidden { display: none; }
+    .message {
+      color: #c44569;
+      text-align: center;
+      margin: 10px 0;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.7rem;
+      color: #c98b9e;
+      background: #fff0f3;
+    }
+  
+    /* 底部导航栏 */
+    .tab-bar {
+      display: flex;
+      background: #fff0f3;
+      border-top: 1px solid #ffe0e7;
+      border-radius: 32px 32px 0 0;
+      position: sticky;
+      bottom: 0;
+      width: 100%;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #a55c6e;
+      cursor: pointer;
+      transition: 0.2s;
+      border-radius: 40px;
+      margin: 4px;
+    }
+    .tab-item.active {
+      background: #ff6b8b;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .tab-icon {
+      font-size: 1.4rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .tab-label {
+      font-size: 0.7rem;
+    }
+
+    /* 页面容器 */
+    .page {
+      display: none;
+    }
+    .page.active-page {
+      display: block;
+    }
+
+    /* Flag 区域样式 */
+    .flag-form {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      background: #fff0f3;
+      padding: 15px;
+      border-radius: 28px;
+    }
+    .flag-form select,
+    .flag-form input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ffced9;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      background: white;
+    }
+    .flags-list {
+      background: #fef6f9;
+      border-radius: 28px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .flag-item {
+      background: white;
+      border-radius: 24px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .flag-info {
+      flex: 3;
+    }
+    .flag-type {
+      font-weight: bold;
+      color: #ff6b8b;
+      margin-right: 12px;
+    }
+    .flag-content {
+      color: #5c3b43;
+    }
+    .flag-encourage {
+      font-size: 0.75rem;
+      color: #a55c6e;
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .flag-actions button {
+      background: #f1c0d0;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+    .flag-actions .complete-btn {
+      background: #a5dee5;
+      color: #2d5f6b;
+    }
+    /* Flag 计数器样式 */
+    .flag-counter {
+      font-size: 0.8rem;
+      color: #a55c6e;
+      text-align: right;
+      margin: -10px 0 10px 0;
+    }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <!-- 未登录视图 -->
+  <div id="authView">
+    <div class="header">
+      <h1>🌸 自律花园 🌸</h1>
+      <p>每天进步一点点，遇见更好的自己</p>
+    </div>
+    <div class="content">
+      <div class="form-card">
+        <input type="text" id="regUsername" class="input-field" placeholder="用户名" autocomplete="off">
+        <input type="password" id="regPassword" class="input-field" placeholder="密码">
+        <input type="text" id="regToken" class="input-field" placeholder="PushPlus Token (可选, 用于提醒)">
+        <div class="auth-buttons">
+          <button class="btn btn-primary" onclick="register()">注册</button>
+          <button class="btn btn-secondary" onclick="showLogin()">去登录</button>
+        </div>
+      </div>
+      <div id="loginForm" class="hidden form-card">
+        <input type="text" id="loginUsername" class="input-field" placeholder="用户名">
+        <input type="password" id="loginPassword" class="input-field" placeholder="密码">
+        <div class="auth-buttons">
+          <button class="btn btn-primary" onclick="login()">登录</button>
+          <button class="btn btn-secondary" onclick="showRegister()">返回注册</button>
+        </div>
+      </div>
+      <div id="authMsg" class="message"></div>
+    </div>
+  </div>
+
+  <!-- 已登录视图 -->
+  <div id="dashboardView" class="hidden">
+  <!-- 页面 1：主页 -->
+  <div id="page-home" class="page active-page">
+    <div class="content">
+      <!-- 状态卡片（含当前日期） -->
+      <div class="status-card" id="statusCard">
+        <div class="current-date" id="currentDate"></div>
+        <div class="checked-badge" id="checkStatus">加载中...</div>
+        <div class="streak" id="streakNum">0</div>
+        <div>🔥 连续坚持天数</div>
+        <div class="points">⭐ 积分 <span id="pointsBalance">0</span></div>
+        <div class="quote" id="dailyQuote">✨ 今日寄语 ✨</div>
+      </div>
+
+      <!-- 主要操作按钮 -->
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="doCheckin()">✅ 今日打卡</button>
+        <button class="btn btn-secondary" onclick="remindMe()">🔔 提醒我</button>
+      </div>
+
+      <!-- Flag 区域 -->
+      <div class="section-title">🎯 我的小旗帜</div>
+      <div class="flag-form">
+        <select id="flagType">
+          <option value="运动">🏃 运动</option>
+          <option value="学习">📚 学习</option>
+          <option value="健康">🥗 健康</option>
+          <option value="早起">🌅 早起</option>
+          <option value="阅读">📖 阅读</option>
+          <option value="冥想">🧘 冥想</option>
+          <option value="创作">✍️ 创作</option>
+        </select>
+        <input type="text" id="flagContent" placeholder="例如：每天跑步3公里" autocomplete="off">
+        <button class="btn btn-secondary" onclick="addFlag()">立个 Flag ✨</button>
+      </div>
+      <!-- Flag 计数器 -->
+      <div id="flagCounter" class="flag-counter"></div>
+      <div id="flagsContainer" class="flags-list">
+        <!-- 动态展示 Flag 列表 -->
+        <div class="flag-placeholder">暂无 Flag，立一个吧～</div>
+      </div>
+
+      <!-- 愿望模块 -->
+      <div class="section-title">🌟 愿望清单</div>
+      <div class="wish-input">
+        <input type="text" id="newWish" placeholder="写下你的小愿望... (10积分兑换)">
+        <button onclick="submitWish()">许愿 ✨</button>
+      </div>
+      <ul class="wish-list" id="wishList">
+        <li>暂无愿望，快去许个愿吧～</li>
+      </ul>
+
+      <!-- 积分商城 -->
+      <div class="section-title">🎁 积分商城</div>
+      <button class="btn btn-secondary" onclick="toggleRewards()">📦 查看可兑换物品</button>
+      <div id="rewardsPanel" class="rewards-panel hidden"></div>
+    </div>
+  </div>
+
+  <!-- 页面 2：记录 -->
+  <div id="page-record" class="page">
+    <div class="content">
+      <!-- 日历区域 -->
+      <div class="calendar-section">
+        <div class="calendar-header">
+          <button id="prevMonthBtn">◀ 上月</button>
+          <span id="calendarMonthYear"></span>
+          <button id="nextMonthBtn">下月 ▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <!-- 里程碑（地图背景） -->
+      <div class="milestone-section" style="background-image: url('/images/map-background.jpg');">
+        <div id="milestoneMarkers"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页面 3：我的 -->
+  <div id="page-mine" class="page">
+  <div class="content">
+    <!-- 用户信息卡片（带头像上传） -->
+    <div class="status-card" style="background: #fff0f3; padding: 20px; text-align: center;">
+      <div style="position: relative; display: inline-block;">
+        <img id="userAvatar" src="/images/default-avatar.png" alt="头像" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ff6b8b;">
+        <label for="avatarUpload" style="position: absolute; bottom: 0; right: 0; background: #ff6b8b; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 14px;">📷</label>
+        <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/gif" style="display: none;">
+      </div>
+      <div style="font-size: 1.4rem; font-weight: bold; margin: 8px 0;" id="userName">加载中...</div>
+    </div>
+
+    <!-- 其余内容保持不变（PushPlus Token 和修改密码） -->
+    <div class="settings-area">
+      <div style="font-weight: bold; margin-bottom: 12px;">⚙️ 个人设置</div>
+      <input type="text" id="pushplusTokenInput" class="input-field" style="margin:0 0 12px 0;" placeholder="PushPlus Token">
+      <button class="btn btn-secondary" style="width:100%;" onclick="updateToken()">更新 Token</button>
+    </div>
+
+    <div class="settings-area" style="margin-top: 20px;">
+      <div style="font-weight: bold; margin-bottom: 12px;">🔐 修改密码</div>
+      <input type="password" id="oldPassword" class="input-field" placeholder="旧密码">
+      <input type="password" id="newPassword" class="input-field" placeholder="新密码（至少3位）">
+      <button class="btn btn-secondary" style="width:100%;" onclick="changePassword()">确认修改</button>
+      <div id="passwordMsg" class="message" style="margin-top: 8px;"></div>
+    </div>
+
+    <button class="btn logout-btn" onclick="logout()" style="margin-top: 20px;">🚪 退出登录</button>
+  </div>
+</div>
+
+  <!-- 底部导航栏 -->
+  <div class="tab-bar">
+    <div class="tab-item active" data-page="home">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-label">主页</span>
+    </div>
+    <div class="tab-item" data-page="record">
+      <span class="tab-icon">📅</span>
+      <span class="tab-label">记录</span>
+    </div>
+    <div class="tab-item" data-page="mine">
+      <span class="tab-icon">👤</span>
+      <span class="tab-label">我的</span>
+    </div>
+  </div>
+  <footer>💪 自律给我自由 | 每晚10点自动提醒</footer>
+</div>
+
+<script>
+  // 加载用户信息（头像、用户名）
+  async function loadUserInfo() {
+    try {
+      const data = await apiRequest('/api/user/info');
+      document.getElementById('userName').innerText = data.username;
+      document.getElementById('userAvatar').innerText = data.avatar || '🌸';
+    } catch (err) {
+      console.error('加载用户信息失败', err);
+      document.getElementById('userName').innerText = '用户';
+    }
+  }
+
+  // 修改密码
+  async function changePassword() {
+    const oldPassword = document.getElementById('oldPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const msgDiv = document.getElementById('passwordMsg');
+    if (!oldPassword || !newPassword) {
+      msgDiv.innerText = '请填写旧密码和新密码';
+      return;
+    }
+    if (newPassword.length < 3) {
+      msgDiv.innerText = '新密码长度至少3位';
+      return;
+    }
+    try {
+      await apiRequest('/api/user/change-password', 'POST', { oldPassword, newPassword });
+      msgDiv.innerText = '✅ 密码修改成功，下次登录请使用新密码';
+      msgDiv.style.color = '#2d5f6b';
+      document.getElementById('oldPassword').value = '';
+      document.getElementById('newPassword').value = '';
+    } catch (err) {
+      msgDiv.innerText = err.message;
+      msgDiv.style.color = '#c44569';
+    }
+  }
+  //---------- 根据类型生成鼓励语 ----------
+  function getEncouragementByType(type, content) {
+    const map = {
+      '运动': `💪 ${content}，动起来，身体会感谢你！`,
+      '学习': `📖 ${content}，每天进步一点点，未来可期～`,
+      '健康': `🥗 ${content}，吃好睡好，活力满满！`,
+      '早起': `🌅 ${content}，迎接清晨的第一缕阳光。`,
+      '阅读': `📚 ${content}，书中自有黄金屋。`,
+      '冥想': `🧘 ${content}，静心养性，内在丰盈。`,
+      '创作': `✍️ ${content}，灵感如泉涌，创造无限。`
+    };
+    return map[type] || `✨ ${content}，坚持就是胜利！`;
+  }
+
+  // ---------- 加载flag ----------
+  async function loadFlags() {
+    const data = await apiRequest('/api/flags');
+    const flags = data.flags || [];
+    console.log('📌 后端返回的 flags 数量:', flags.length, flags);
+    const container = document.getElementById('flagsContainer');
+    const counter = document.getElementById('flagCounter');
+    if (!flags.length) {
+      container.innerHTML = '<div class="flag-placeholder">✨ 暂无 Flag，立一个吧 ✨</div>';
+      if (counter) counter.innerText = '';
+      return;
+    }
+    // 更新计数器
+    if (counter) counter.innerText = `✨ 共 ${flags.length} 个旗帜 ✨`;
+    // 关键：用 map 遍历所有 flag，生成完整的 HTML 字符串
+    container.innerHTML = flags.map(flag => `
+      <div class="flag-item" data-id="${flag.id}">
+        <div class="flag-info">
+          <span class="flag-type">${flag.type}</span>
+          <span class="flag-content">${escapeHtml(flag.content)}</span>
+          <div class="flag-encourage">💬 ${getEncouragementByType(flag.type, flag.content)}</div>
+        </div>
+        <div class="flag-actions">
+          ${flag.status === 'active' ? `
+            <button class="complete-btn" onclick="completeFlag(${flag.id})">完成 ✓</button>
+            <button onclick="deleteFlag(${flag.id})">删除 🗑️</button>
+          ` : '<span>✅ 已完成</span>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---------- 增加flag ----------
+  async function addFlag() {
+    const type = document.getElementById('flagType').value;
+    const content = document.getElementById('flagContent').value.trim();
+    if (!content) return alert('请填写具体内容');
+    try {
+      await apiRequest('/api/flags', 'POST', { type, content });
+      document.getElementById('flagContent').value = '';
+      await loadFlags();
+    } catch (err) {
+      console.error('添加失败:', err);
+      alert('添加失败: ' + err.message);
+      // 不要在这里抛出异常，让函数正常结束
+    }
+  }
+
+  // ---------- 删除flag ----------
+  async function deleteFlag(flagId) {
+    if (!confirm('确定要删除这个 Flag 吗？')) return;
+    try {
+      await apiRequest(`/api/flags/${flagId}`, 'DELETE');
+      await loadFlags();
+    } catch (err) {
+      alert('删除失败: ' + err.message);
+    }
+  }
+
+  // ---------- 完成flag ----------
+  async function completeFlag(flagId) {
+    if (!confirm('确认已完成这个 Flag？')) return;
+    try {
+      await apiRequest(`/api/flags/${flagId}/complete`, 'POST');
+      await loadFlags();
+    } catch (err) {
+      alert('操作失败: ' + err.message);
+    }
+  }
+
+  // ---------- JWT 认证 ----------
+  let authToken = localStorage.getItem('authToken');
+
+  async function apiRequest(url, method = 'GET', body = null) {
+    const options = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authToken ? `Bearer ${authToken}` : ''
+      }
+    };
+    if (body) options.body = JSON.stringify(body);
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 403) {
+      alert('登录已过期，请重新登录');
+      logout();
+      throw new Error('Unauthorized');
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '请求失败');
+    return data;
+  }
+
+  // ---------- UI 切换 ----------
+  function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.querySelector('.form-card:first-child').style.display = 'none';
+    document.getElementById('authMsg').innerText = '';
+  }
+  function showRegister() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.querySelector('.form-card:first-child').style.display = 'block';
+    document.getElementById('authMsg').innerText = '';
+  }
+
+  // 注册
+  async function register() {
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const token = document.getElementById('regToken').value.trim();
+    if (!username || !password) return alert('用户名和密码不能为空');
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, pushplus_token: token })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('注册成功！请登录');
+        showLogin();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      document.getElementById('authMsg').innerText = err.message;
+    }
+  }
+
+  // 登录
+  async function login() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!username || !password) return alert('请输入用户名和密码');
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (data.success) {
+        authToken = data.token;
+        localStorage.setItem('authToken', authToken);
+        document.getElementById('authView').classList.add('hidden');
+        document.getElementById('dashboardView').classList.remove('hidden');
+        await loadDashboard();
+        await loadWishes();
+        await loadFlags();
+        await loadUserInfo();
+        initAvatarUpload();
+        // 里程碑、日历暂时不加载，等切换记录页再加载
+        initTabs();          // 绑定导航栏事件
+        switchPage('home');  // 默认显示主页
+        // 加载用户自己的 token 用于显示
+        const tokenData = await apiRequest('/api/user/token');
+        document.getElementById('pushplusTokenInput').value = tokenData.token || '';
+      }
+    } catch (err) {
+      document.getElementById('authMsg').innerText = err.message;
+    }
+  }
+
+  // 退出
+  async function logout() {
+    localStorage.removeItem('authToken');
+    authToken = null;
+    document.getElementById('dashboardView').classList.add('hidden');
+    document.getElementById('authView').classList.remove('hidden');
+    showRegister();
+  }
+
+  // 加载打卡状态
+  async function loadDashboard() {
+    const data = await apiRequest('/api/status');
+    document.getElementById('checkStatus').innerHTML = data.checked ? '✅ 今日已完成打卡' : '⏳ 今日还未打卡';
+    document.getElementById('streakNum').innerText = data.streak;
+    document.getElementById('pointsBalance').innerText = data.points;
+    document.getElementById('dailyQuote').innerHTML = `💬 ${data.quote}`;
+    // 显示当前日期
+    const today = new Date();
+    const formatted = `${today.getFullYear()}.${today.getMonth()+1}.${today.getDate()} ${['周日','周一','周二','周三','周四','周五','周六'][today.getDay()]}`;
+    document.getElementById('currentDate').innerText = `📅 ${formatted}`;
+  }
+
+  // 打卡
+  async function doCheckin() {
+    try {
+      const res = await apiRequest('/api/checkin', 'POST');
+      if (res.success) {
+        alert(`🎉 打卡成功！连续坚持 ${res.streak} 天`);
+        await loadDashboard();
+        // 刷新日历
+        await refreshCalendar();
+        if (window.recordPageLoaded) {
+          await loadCheckinsForMonth(currentYear, currentMonth);
+          await loadMilestones();
+        }
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // 自我提醒
+  async function remindMe() {
+    try {
+      await apiRequest('/api/remind', 'POST');
+      alert('已发送提醒（PushPlus）✨');
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // 更新 PushPlus Token
+  async function updateToken() {
+    const token = document.getElementById('pushplusTokenInput').value.trim();
+    try {
+      await apiRequest('/api/user/token', 'POST', { token });
+      alert('Token 更新成功');
+    } catch (err) {
+      alert('更新失败: ' + err.message);
+    }
+  }
+
+  // 加载用户信息（包含头像）
+  async function loadUserInfo() {
+    try {
+      const data = await apiRequest('/api/user/info');
+      document.getElementById('userName').innerText = data.username;
+      const avatarImg = document.getElementById('userAvatar');
+      if (data.avatar && data.avatar !== '/images/default-avatar.png') {
+        avatarImg.src = data.avatar;
+      } else {
+        avatarImg.src = '/images/default-avatar.png';
+      }
+    } catch (err) {
+      console.error('加载用户信息失败', err);
+      document.getElementById('userName').innerText = '用户';
+    }
+  }
+
+  // 上传头像
+  async function uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    try {
+      const res = await fetch('/api/user/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      // 更新头像显示，加时间戳避免缓存
+      document.getElementById('userAvatar').src = data.avatarUrl + '?t=' + Date.now();
+      alert('头像更新成功');
+    } catch (err) {
+      alert('上传失败: ' + err.message);
+    }
+  }
+
+  // 绑定头像上传事件
+  function initAvatarUpload() {
+    const fileInput = document.getElementById('avatarUpload');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          // 前端校验文件类型和大小
+          if (!file.type.match('image.*')) {
+            alert('请选择图片文件');
+            return;
+          }
+          if (file.size > 2 * 1024 * 1024) {
+            alert('文件大小不能超过2MB');
+            return;
+          }
+          uploadAvatar(file);
+        }
+      });
+    }
+  }
+
+  // 愿望相关
+  async function loadWishes() {
+    const data = await apiRequest('/api/wishes');
+    const wishes = data.wishes || [];
+    const container = document.getElementById('wishList');
+    if (!wishes.length) {
+      container.innerHTML = '<li>✨ 暂无愿望，许个愿吧 ✨</li>';
+      return;
+    }
+    container.innerHTML = wishes.map(w => `
+      <li>
+        <span>${escapeHtml(w.wish_text)}</span>
+        <div>
+          <span class="wish-status">${w.status === 'active' ? '🌈 可兑换' : (w.status === 'fulfilled' ? '✅ 已实现' : '❌ 已取消')}</span>
+          ${w.status === 'active' ? `<button class="small-btn" onclick="cancelWish(${w.id})">撤销</button>` : ''}
+        </div>
+      </li>
+    `).join('');
+  }
+
+  async function submitWish() {
+    const wishText = document.getElementById('newWish').value.trim();
+    if (!wishText) return alert('写下你的愿望吧～');
+    try {
+      await apiRequest('/api/wishes', 'POST', { wish: wishText });
+      alert('愿望已提交！可使用10积分兑换');
+      document.getElementById('newWish').value = '';
+      await loadWishes();
+    } catch (err) {
+      alert('许愿失败: ' + err.message);
+    }
+  }
+
+  async function cancelWish(wishId) {
+    if (!confirm('确定要取消这个愿望吗？')) return;
+    try {
+      await apiRequest(`/api/wishes/${wishId}/cancel`, 'POST');
+      await loadWishes();
+    } catch (err) {
+      alert('撤销失败: ' + err.message);
+    }
+  }
+
+  // 兑换相关
+  let rewardsData = [];
+  async function toggleRewards() {
+    const panel = document.getElementById('rewardsPanel');
+    if (!panel.classList.contains('hidden')) {
+      panel.classList.add('hidden');
+      return;
+    }
+    try {
+      const rewards = await apiRequest('/api/rewards');
+      rewardsData = rewards;
+      panel.innerHTML = `
+        <div style="margin-bottom: 12px;"><strong>🎟️ 可用积分兑换：</strong></div>
+        ${rewards.map(r => `
+          <div class="reward-item">
+            <span>${r.name}</span>
+            <span>⭐ ${r.cost} 积分</span>
+            <button class="small-btn" onclick="redeem('${r.name}', ${r.cost})">兑换</button>
+          </div>
+        `).join('')}
+      `;
+      panel.classList.remove('hidden');
+    } catch (err) {
+      alert('加载奖励失败');
+    }
+  }
+
+  async function redeem(item, cost) {
+    if (item === '实现一个愿望') {
+      const wishesData = await apiRequest('/api/wishes');
+      const activeWishes = wishesData.wishes.filter(w => w.status === 'active');
+      if (activeWishes.length === 0) {
+        alert('没有可兑换的愿望，请先提交一个愿望');
+        return;
+      }
+      let wishId = null;
+      if (activeWishes.length === 1) {
+        wishId = activeWishes[0].id;
+        if (!confirm(`将使用10积分兑换愿望：「${activeWishes[0].wish_text}」\n确认兑换吗？`)) return;
+      } else {
+        let msg = '请选择要兑换的愿望ID：\n';
+        activeWishes.forEach(w => { msg += `${w.id}: ${w.wish_text}\n`; });
+        const input = prompt(msg + '\n输入愿望ID：');
+        if (!input) return;
+        wishId = parseInt(input);
+        if (!activeWishes.find(w => w.id === wishId)) {
+          alert('无效的愿望ID');
+          return;
+        }
+        if (!confirm('确认兑换该愿望吗？')) return;
+      }
+      try {
+        const res = await apiRequest('/api/redeem', 'POST', { item, cost, wishId });
+        if (res.success) {
+          alert(`兑换成功！剩余积分: ${res.newBalance}`);
+          await loadDashboard();
+          await loadWishes();
+          await loadMilestones();   // 刷新里程碑（点亮下一个）
+          document.getElementById('rewardsPanel').classList.add('hidden');
+        }
+      } catch (err) {
+        alert('兑换失败: ' + err.message);
+      }
+    } else {
+      if (!confirm(`确认用 ${cost} 积分兑换「${item}」吗？`)) return;
+      try {
+        const res = await apiRequest('/api/redeem', 'POST', { item, cost });
+        if (res.success) {
+          alert(`兑换成功！剩余积分: ${res.newBalance}`);
+          await loadDashboard();
+          document.getElementById('rewardsPanel').classList.add('hidden');
+        }
+      } catch (err) {
+        alert('兑换失败: ' + err.message);
+      }
+    }
+  }
+
+  // ---------- 日历相关 ----------
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth() + 1; // 1-12
+  let checkedDays = new Set();
+
+  async function loadCheckinsForMonth(year, month) {
+    try {
+      const start = `${year}-${String(month).padStart(2,'0')}-01`;
+      const end = `${year}-${String(month).padStart(2,'0')}-${new Date(year, month, 0).getDate()}`;
+      const res = await apiRequest(`/api/checkins/range?start=${start}&end=${end}`);
+      checkedDays.clear();
+      if (res.dates) res.dates.forEach(d => checkedDays.add(d));
+      renderCalendar(year, month);
+    } catch (err) {
+      console.error('加载打卡记录失败', err);
+    }
+  }
+
+  function renderCalendar(year, month) {
+    const firstDay = new Date(year, month-1, 1);
+    const startWeekday = firstDay.getDay(); // 0周日
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    const weekdays = ['日','一','二','三','四','五','六'];
+    weekdays.forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'calendar-weekday';
+      div.innerText = w;
+      grid.appendChild(div);
+    });
+    for (let i = 0; i < startWeekday; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'calendar-day empty';
+      grid.appendChild(empty);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'calendar-day';
+      if (checkedDays.has(dateStr)) dayDiv.classList.add('checked');
+      dayDiv.innerText = d;
+      grid.appendChild(dayDiv);
+    }
+    document.getElementById('calendarMonthYear').innerText = `${year}年 ${month}月`;
+  }
+
+  async function refreshCalendar() {
+    await loadCheckinsForMonth(currentYear, currentMonth);
+  }
+
+  // 页面切换
+  function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active-page');
+    });
+    document.getElementById(`page-${pageId}`).classList.add('active-page');
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.querySelector(`.tab-item[data-page="${pageId}"]`).classList.add('active');
+
+    // 如果切换到记录页且尚未加载过日历和里程碑，则加载
+    if (pageId === 'record' && !window.recordPageLoaded) {
+      loadCalendarAndMilestone();
+      window.recordPageLoaded = true;
+    }
+  }
+
+  function loadCalendarAndMilestone() {
+    loadCheckinsForMonth(currentYear, currentMonth);
+    loadMilestones();
+    initCalendarControls();  // 确保日历按钮绑定事件
+  }
+
+  function initTabs() {
+    const tabs = document.querySelectorAll('.tab-item');
+    // 先移除所有旧监听器（避免重复绑定）
+    tabs.forEach(tab => {
+      tab.removeEventListener('click', tab._listener);
+      const handler = (e) => {
+        const page = tab.getAttribute('data-page');
+        switchPage(page);
+      };
+      tab.addEventListener('click', handler);
+      tab._listener = handler; // 存储以便后续移除
+    });
+  }
+  
+  function initCalendarControls() {
+    document.getElementById('prevMonthBtn').onclick = async () => {
+      if (currentMonth === 1) {
+        currentMonth = 12;
+        currentYear--;
+      } else {
+        currentMonth--;
+      }
+      await loadCheckinsForMonth(currentYear, currentMonth);
+    };
+    document.getElementById('nextMonthBtn').onclick = async () => {
+      if (currentMonth === 12) {
+        currentMonth = 1;
+        currentYear++;
+      } else {
+        currentMonth++;
+      }
+      await loadCheckinsForMonth(currentYear, currentMonth);
+    };
+  }
+
+  // ---------- 里程碑（新版：地图背景 + 绝对定位标记） ----------
+  // 坐标百分比（相对于 .milestone-section 的宽高）
+  const milestonePositions = [
+    { left: 13, top: 10 },   // 第1站
+    { left: 14, top: 50 },
+    { left: 14, top: 83 },
+    { left: 39, top: 74 },
+    { left: 64, top: 85 },
+    { left: 88, top: 70 },
+    { left: 75, top: 50 },
+    { left: 88, top: 21 },
+    { left: 69, top: 10 },
+    { left: 49, top: 23 }   // 最多10个
+  ];
+
+  async function loadMilestones() {
+    const data = await apiRequest('/api/milestone/count');
+    const count = data.count; // 已兑换愿望次数（最多点亮到第 count 个）
+    const container = document.getElementById('milestoneMarkers');
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 0; i < milestonePositions.length; i++) {
+      const pos = milestonePositions[i];
+      const marker = document.createElement('div');
+      marker.className = 'milestone-marker' + (i < count ? ' lit' : '');
+      marker.style.left = pos.left + '%';
+      marker.style.top = pos.top + '%';
+      marker.innerHTML = i < count ? '⭐' : '🌫️❓';
+      marker.title = i < count ? `第${i+1}站 已解锁` : `第${i+1}站 隐藏在迷雾中`;
+      container.appendChild(marker);
+    }
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // 页面加载自动尝试登录
+  (async function init() {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    authToken = token;
+    try {
+      await loadDashboard();
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+      await loadWishes();
+      await loadFlags();
+      await loadUserInfo();
+      await loadUserInfo();
+      initAvatarUpload();
+      // 不再立即加载里程碑和日历，而是初始化导航栏并切换到主页
+      initTabs();           // 绑定底部导航栏点击事件
+      switchPage('home');   // 默认显示主页
+      // 加载用户自己的 token 用于显示
+      const tokenData = await apiRequest('/api/user/token');
+      document.getElementById('pushplusTokenInput').value = tokenData.token || '';
+      // 注意：日历和里程碑会在用户首次点击“记录”页时懒加载，由 switchPage 中的逻辑自动触发
+    } catch (e) {
+      console.log('自动登录失败', e);
+      logout();
+    }
+  } else {
+    showRegister();
+  }
+})();
+</script>
+</body>
+</html>
