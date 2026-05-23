@@ -123,7 +123,7 @@ Discipline-Dimo/
 打开终端执行：
 
 ```bash
-git clone https://github.com/你的用户名/Discipline-Dimo.git
+git clone https://github.com/CyrusHuang-coder/Discipline-Dimo.git
 cd Discipline-Dimo
 ```
 
